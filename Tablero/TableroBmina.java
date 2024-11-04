@@ -8,6 +8,7 @@ import Casillas.Casilla;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
+import javax.swing.JOptionPane;
 
 /**
  *
@@ -126,24 +127,42 @@ public class TableroBmina {
     }
     
     public void seleccionarCasilla(int posFila, int posColumna) {
-        eventoCasillaAbierta.accept(this.casillas[posFila][posColumna]);
-        if (this.casillas[posFila][posColumna].isMina()) {
-            eventoPartidaPerdida.accept(obtenerCasillasConMinas());
-        }else if (this.casillas[posFila][posColumna].getNumMinasAlrededor()==0){
-            marcarCasillaAbierta(posFila, posColumna);
-            List<Casilla> casillasAlrededor=obtenerCasillasAlrededor(posFila, posColumna);
-            for(Casilla casilla: casillasAlrededor){
-                if (!casilla.isAbierta()){
-                    seleccionarCasilla(casilla.getPosFila(), casilla.getPosColumna());
-                }
+    Casilla casillaSeleccionada = this.casillas[posFila][posColumna];
+    eventoCasillaAbierta.accept(casillaSeleccionada);
+
+    if (casillaSeleccionada.isMina()) {
+        eventoPartidaPerdida.accept(obtenerCasillasConMinas());
+        
+        return;
+        // Termina la función si se ha perdido
+    } 
+    
+    if (casillaSeleccionada.getNumMinasAlrededor() == 0) {
+        marcarCasillaAbierta(posFila, posColumna);
+        List<Casilla> casillasAlrededor = obtenerCasillasAlrededor(posFila, posColumna);
+        for (Casilla casilla : casillasAlrededor) {
+            if (!casilla.isAbierta()) {
+                seleccionarCasilla(casilla.getPosFila(), casilla.getPosColumna());
             }
-        }else{
-            marcarCasillaAbierta(posFila, posColumna);
         }
-        if (partidaGanada()){
-           eventoPartidaGanada.accept(obtenerCasillasConMinas());
-        }
+    } else {
+        marcarCasillaAbierta(posFila, posColumna);
     }
+
+    // Verifica si se ha ganado después de abrir una casilla
+    if (partidaGanada()) {
+        eventoPartidaGanada.accept(obtenerCasillasConMinas());
+    }
+}
+
+boolean partidaPerdida() {
+    // Este método ya está evaluado en el evento de partida perdida,
+    // puedes agregar lógica aquí si necesitas realizar alguna acción específica al perder.
+    return false; // No se usa aquí directamente, se puede usar en lógica adicional si se desea
+    
+}
+
+   
     
     void marcarCasillaAbierta(int posFila, int posColumna){
         if (!this.casillas[posFila][posColumna].isAbierta()){
@@ -168,7 +187,9 @@ public class TableroBmina {
     public void setEventoPartidaPerdida(Consumer<List<Casilla>> eventoPartidaPerdida) {
         this.eventoPartidaPerdida = eventoPartidaPerdida;
     }
-
+    
+        
+    
     public void setEventoCasillaAbierta(Consumer<Casilla> eventoCasillaAbierta) {
         this.eventoCasillaAbierta = eventoCasillaAbierta;
     }
